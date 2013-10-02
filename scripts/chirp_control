@@ -51,11 +51,12 @@ case "$1" in
           mkdir $CHIRP_DIR 
       fi
       username=`whoami`
+      uid=`id -u $username`
       if [ ! -e $CHIRP_DIR/acl ];
       then
           echo "unix:$username rwlda" > $CHIRP_DIR/acl        
       fi
-      daemon --pidfile $CHIRP_PIDFILE $CHIRP -b -r $EXPORT_DIR -Z $CHIRP_DIR/chirp.port -A $CHIRP_DIR/acl& 
+      daemon --pidfile $CHIRP_PIDFILE $CHIRP -b -r $EXPORT_DIR -p $uid  -A $CHIRP_DIR/acl & 
       RETVAL=$?
       echo
       if [ $RETVAL -eq 0 ] ;
