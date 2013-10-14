@@ -35,7 +35,7 @@ PARROT_URL = '%%%PARROT_URL%%%'
 JOB_SCRIPT = '%%%JOB_SCRIPT%%%'
 JOB_ARGS = %%%JOB_ARGS%%%
 CVMFS_INFO = %%%CVMFS_INFO%%%
-VERSION = '0.11-osgc'
+VERSION = '0.15-osgc'
 
 def write_ticket(directory):
   """
@@ -79,7 +79,7 @@ def ticket_valid():
     return True
   expiration = time.strptime(match.group(1),
                              "%a %b %d %H:%M:%S %Y")
-  return time.time() > time.mktime(expiration)
+  return time.mktime(expiration) > time.time() 
 
 def download_tarball(url, path):
   """Download a tarball from a given url and extract it to specified path"""
