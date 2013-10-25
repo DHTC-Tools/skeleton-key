@@ -26,7 +26,7 @@ import tarfile, urlparse, time, re
 TICKET_CONTENTS = """%%%TICKET%%%
 """
 OSGC_PROXY = 'http://squid.osgconnect.net:3128'
-CATALOG_HOST = 'stash.opensciencegrid.net'
+CATALOG_HOST = 'stash.osgconnect.net'
 CHIRP_MOUNT = '%%%CHIRP_MOUNT%%%'
 WEB_PROXY= '%%%WEB_PROXY%%%'
 USER_PROXY = """%%%USER_PROXY%%%"""
