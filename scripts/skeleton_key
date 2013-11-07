@@ -22,10 +22,26 @@
 
 import optparse, os, sys, ConfigParser, getpass, re, urlparse, time, shutil
 
-VERSION = '0.15-osgc'
+VERSION = '0.16-osgc'
 CHIRP_SERVER = 'stash.osgconnect.net'
 RUN_TEMPLATE_LOCATION = '/usr/share/skeletonkey/run_job.py'
 OASIS_CONFIG = {'oasis.opensciencegrid.org': {'options': 'url=http://oasis-replica.opensciencegrid.org:8000/cvmfs/oasis,pubkey=opensciencegrid.org.pub,quota_limit=2000,proxies=squid.osgconnect.net:3128', 'key': 'http://stash.osgconnect.net/keys/opensciencegrid.org.pub'}}
+PREDEFINED_REPOS = { 
+  'oasis' : { 'oasis.opensciencegrid.org' : 
+              { 'options' : 'url=http://oasis-replica.opensciencegrid.org:8000/cvmfs/oasis,pubkey=opensciencegrid.org.pub,quota_limit=2000,proxies=squid.osgconnect.net:3128', 
+                'key': 'http://stash.osgconnect.net/keys/opensciencegrid.org.pub'}},
+  'atlas' : { 'atlas.cern.ch' : 
+              { 'options' : 'url=http://cvmfs.racf.bnl.gov:8000/opt/atlas;http://cvmfs-stratum-one.cern.ch:8000/opt/atlas,pubkey=cern.ch.pub,quota_limit=2000,proxies=uc3-data.uchicago.edu:3128', 
+                'key': 'http://uc3-data.uchicago.edu/keys/cern.ch.pub'}},
+  'atlas-condb' : { 'atlas-condb.cern.ch' : 
+              { 'options' : 'url=http://cvmfs.racf.bnl.gov:8000/opt/atlas-condb;http://cvmfs-stratum-one.cern.ch:8000/opt/atlas-condb,pubkey=cern.ch.pub,quota_limit=2000,proxies=uc3-data.uchicago.edu:3128', 
+                'key': 'http://uc3-data.uchicago.edu/keys/cern.ch.pub'}}, 
+  'atlas-nightlies' : { 'atlas-nightlies.cern.ch' : 
+              { 'options' : 'url=http://cvmfs-atlas-nightlies.cern.ch/cvmfs/atlas-nightlies.cern.ch,pubkey=cern.ch.pub,quota_limit=2000,proxies=uc3-data.uchicago.edu:3128', 
+                'key': 'http://uc3-data.uchicago.edu/keys/cern.ch.pub'}},
+  'uc3' : { 'uc3.uchicago.edu' : 
+              { 'options' : 'url=http://uc3-cvmfs.uchicago.edu/opt/uc3/,pubkey=http://uc3-data.uchicago.edu/mwt2.key,quota_limit=1000,proxies=uc3-data.uchicago.edu:3128', 
+                'key' : 'http://uc3-data.uchicago.edu/uc3.key'}}}
 
 def get_directories(config, dir_type):
   """
@@ -78,6 +94,18 @@ def parse_cvmfs_options(config):
     return OASIS_CONFIG
   
   repo_num = 1
+  if config.has_option('CVMFS', 'repos'):
+    repo_list = config.get('CVMFS', 'repos').split(',')
+    for repo in repo_list:
+      if repo in PREDEFINED_REPOS and repo not in cvmfs_info:
+        repo_entry = PREDEFINED_REPOS[repo]
+        repo_name = repo_entry.keys()[0]
+        cvmfs_info[repo_name] = repo_entry[repo_name]
+      elif repo not in PREDEFINED_REPOS:
+        sys.stderr.write("CVMFS repo %s in repos option not recognized" % repo)
+      elif repo in cvmfs_info:
+        sys.stderr.write("CVMFS repo %s in repos option is repeated" % repo)
+
   while True:
     repo_opt = "repo%s" % repo_num
     if not config.has_option('CVMFS', repo_opt):
@@ -286,7 +314,7 @@ if __name__ == '__main__':
   (options, args) = parser.parse_args()
   
   if options.config_file == '':
-    parser.exit(msg='Must give a config file')
+    parser.exit(msg="Must give a config file\n")
   
   if (not os.path.exists(options.config_file) or 
       not os.path.isfile(options.config_file)):

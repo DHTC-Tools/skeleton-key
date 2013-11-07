@@ -35,7 +35,7 @@ PARROT_URL = '%%%PARROT_URL%%%'
 JOB_SCRIPT = '%%%JOB_SCRIPT%%%'
 JOB_ARGS = %%%JOB_ARGS%%%
 CVMFS_INFO = %%%CVMFS_INFO%%%
-VERSION = '0.15-osgc'
+VERSION = '0.16-osgc'
 
 def write_ticket(directory):
   """
@@ -118,7 +118,7 @@ def setup_parrot(directory):
   parrot_path = download_tarball(parrot_url, directory)
   return parrot_path
 
-def generate_env(parrot_path):
+def generate_env(parrot_path, debug = False):
   """
   Create a dict with the environment variables for binary + parrot
   """
@@ -140,8 +140,17 @@ def generate_env(parrot_path):
                                           'parrot',
                                           'lib',
                                           'libparrot_helper.so')
-  job_env['CHIRP_MOUNT'] = CHIRP_MOUNT
+  job_env['CHIRP_MOUNT'] = "/remote_data"
   job_env['CATALOG_HOST'] = CATALOG_HOST
+  if debug:
+    sys.stdout.write("Added env vars:\n")
+    for i in ['http_proxy',
+              'HTTP_PROXY',
+              'PARROT_ALLOW_SWITCHING_CVMFS_REPOSITORIES',
+              'PARROT_HELPER',
+              'CHIRP_MOUNT',
+              'CATALOG_HOST']:
+      sys.stdout.write("%s=%s\n" % (i, job_env[i]))
   return job_env 
 
 def update_proxy(cvmfs_options):
@@ -185,13 +194,15 @@ def get_cvmfs_keys(temp_dir):
       url_data = url_handle.read(2048)
     key_file.close()
 
-def run_application(temp_dir):
+def run_application(temp_dir, debug = False):
   """
   Run specified user application in a parrot environment
   """
-  job_env = generate_env(temp_dir)
+  job_env = generate_env(temp_dir, debug)
   get_cvmfs_keys(temp_dir)
   job_args = ['./parrot/bin/parrot_run', 
+              '-M',
+              "/remote_data=%s" % CHIRP_MOUNT,
               '-t',
               os.path.join(temp_dir, 'parrot_cache'),
               '-r',
@@ -204,7 +215,8 @@ def run_application(temp_dir):
   os.chdir(temp_dir)
   if len(sys.argv) > 1:
     job_args.extend(sys.argv[1:])
-
+  if debug:
+    sys.stdout.write("Parrot call:\n %s\n" % (" ".join(job_args)))
   return subprocess.call(job_args, env=job_env)
 
 def main():
@@ -217,7 +229,7 @@ def main():
                     default=False)
   parser.add_option("--preserve-dir", 
                     dest="preserve_dir",
-                    help="Preserver working directory for debugging",
+                    help="Preserve working directory for debugging",
                     action="store_true", 
                     default=False)
   (options, args) = parser.parse_args()  
@@ -248,7 +260,7 @@ def main():
     if not setup_application(temp_dir):       
       sys.stderr.write("Can't download application binaries, exiting...\n")
       sys.exit(1)
-  exit_code = run_application(temp_dir)
+  exit_code = run_application(temp_dir, options.debug)
   if exit_code != 0:
     sys.stderr.write("Application exited with error\n")
     if options.debug:
