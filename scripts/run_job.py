@@ -111,7 +111,12 @@ def setup_application(directory):
     """
     Download application binaries and setup in temp directory
     """
-    app_path = download_tarball(APP_URL, directory)
+    try:
+        app_path = download_tarball(APP_URL, directory)
+    except urllib2.HTTPError as e:
+        sys.stderr.write("Error downloading %s: %s\n" % (APP_URL, str(e)))
+        sys.stderr.write("Is this the correct URL?\n")
+        sys.exit(1)
     return app_path
 
 
@@ -121,7 +126,12 @@ def setup_parrot(directory):
     """
     sys_ver = platform.dist()[1][0]
     parrot_url = PARROT_URL + "/parrot-sl%s.tar.gz" % sys_ver
-    parrot_path = download_tarball(parrot_url, directory)
+    try:
+        parrot_path = download_tarball(parrot_url, directory)
+    except urllib2.HTTPError as e:
+        sys.stderr.write("Error downloading %s: %s\n" % (APP_URL, str(e)))
+        sys.stderr.write("Please check your SkeletonKey .ini file.")
+        sys.exit(1)
     return parrot_path
 
 
@@ -138,7 +148,7 @@ def generate_env(parrot_path, debug=False):
         job_env['http_proxy'] = OSGC_PROXY
         job_env['HTTP_PROXY'] = OSGC_PROXY
 
-    if job_env.has_key('OSG_SQUID_LOCATION') and job_env['OSG_SQUID_LOCATION'] != 'UNAVAILABLE':
+    if 'OSG_SQUID_LOCATION' in job_env and job_env['OSG_SQUID_LOCATION'] != 'UNAVAILABLE':
         job_env['http_proxy'] = job_env['OSG_SQUID_LOCATION']
         job_env['HTTP_PROXY'] = job_env['OSG_SQUID_LOCATION']
 

@@ -30,29 +30,55 @@ VERSION = '0.17-osgc'
 CHIRP_SERVER = 'stash.osgconnect.net'
 RUN_TEMPLATE_LOCATION = '/usr/share/skeletonkey/run_job.py'
 OASIS_CONFIG = {'oasis.opensciencegrid.org': {
-    'options': 'url=http://oasis-replica.opensciencegrid.org:8000/cvmfs/oasis,pubkey=opensciencegrid.org.pub,quota_limit=2000,proxies=squid.osgconnect.net:3128',
+    'options': "url=http://oasis-replica.opensciencegrid.org:8000/cvmfs/oasis,"
+               "pubkey=opensciencegrid.org.pub,quota_limit=2000,proxies=squid.osgconnect.net:3128",
     'key': 'http://stash.osgconnect.net/keys/opensciencegrid.org.pub'}}
+CVMFS_COMMON_OPTS = 'quota_limit=4000,proxies=squid.osgconnect.net:3128'
+LHC_CVMFS_URL_BNL = 'http://cvmfs.racf.bnl.gov:8000/opt'
+LHC_CVMFS_URL_CERN = 'http://cvmfs-stratum-one.cern.ch:8000/opt'
+CERN_CVMFS_KEY_URL = 'http://stash.osgconnect.net/keys/opensciencegrid.org.pub'
 PREDEFINED_REPOS = {
     'oasis': {'oasis.opensciencegrid.org':
                   {
-                      'options': 'url=http://oasis-replica.opensciencegrid.org:8000/cvmfs/oasis,pubkey=opensciencegrid.org.pub,quota_limit=2000,proxies=squid.osgconnect.net:3128',
-                      'key': 'http://stash.osgconnect.net/keys/opensciencegrid.org.pub'}},
+                      'options': "url=http://oasis-replica.opensciencegrid.org:8000/cvmfs/oasis,"
+                                 "pubkey=opensciencegrid.org.pub,%s" % CVMFS_COMMON_OPTS,
+                      'key': CERN_CVMFS_KEY_URL,
+                  }},
     'atlas': {'atlas.cern.ch':
                   {
-                      'options': 'url=http://cvmfs.racf.bnl.gov:8000/opt/atlas;http://cvmfs-stratum-one.cern.ch:8000/opt/atlas,pubkey=cern.ch.pub,quota_limit=2000,proxies=uc3-data.uchicago.edu:3128',
-                      'key': 'http://uc3-data.uchicago.edu/keys/cern.ch.pub'}},
+                      'options': "url=%s/atlas;%s/atlas,pubkey=cern.ch.pub,%s" % (LHC_CVMFS_URL_BNL,
+                                                                                  LHC_CVMFS_URL_CERN,
+                                                                                  CVMFS_COMMON_OPTS),
+                      'key': CERN_CVMFS_KEY_URL,
+                  }},
     'atlas-condb': {'atlas-condb.cern.ch':
                         {
-                            'options': 'url=http://cvmfs.racf.bnl.gov:8000/opt/atlas-condb;http://cvmfs-stratum-one.cern.ch:8000/opt/atlas-condb,pubkey=cern.ch.pub,quota_limit=2000,proxies=uc3-data.uchicago.edu:3128',
-                            'key': 'http://uc3-data.uchicago.edu/keys/cern.ch.pub'}},
+                            'options': "url=%s/atlas-condb;%s/atlas-condb,pubkey=cern.ch.pub,%s" % (LHC_CVMFS_URL_BNL,
+                                                                                                    LHC_CVMFS_URL_CERN,
+                                                                                                    CVMFS_COMMON_OPTS),
+                      'key': CERN_CVMFS_KEY_URL,
+                        }},
     'atlas-nightlies': {'atlas-nightlies.cern.ch':
                             {
-                                'options': 'url=http://cvmfs-atlas-nightlies.cern.ch/cvmfs/atlas-nightlies.cern.ch,pubkey=cern.ch.pub,quota_limit=2000,proxies=uc3-data.uchicago.edu:3128',
-                                'key': 'http://uc3-data.uchicago.edu/keys/cern.ch.pub'}},
+                                'options': "url=%s/atlas-nightlies;%s/atlas-nightlies,"
+                                           "pubkey=cern.ch.pub,%s" % (LHC_CVMFS_URL_BNL,
+                                                                      LHC_CVMFS_URL_CERN,
+                                                                      CVMFS_COMMON_OPTS),
+                                'key': CERN_CVMFS_KEY_URL,
+                            }},
+    'sft.cern.ch': {'sft.cern.ch':
+                        {
+                            'options': "url=%s/sft;%s/sft,pubkey=cern.ch.pub,%s" % (LHC_CVMFS_URL_BNL,
+                                                                                    LHC_CVMFS_URL_CERN,
+                                                                                    CVMFS_COMMON_OPTS),
+                            'key': CERN_CVMFS_KEY_URL,
+                        }},
     'uc3': {'uc3.uchicago.edu':
                 {
-                    'options': 'url=http://uc3-cvmfs.uchicago.edu/opt/uc3/,pubkey=http://uc3-data.uchicago.edu/mwt2.key,quota_limit=1000,proxies=uc3-data.uchicago.edu:3128',
-                    'key': 'http://uc3-data.uchicago.edu/uc3.key'}}}
+                    'options': "url=http://uc3-cvmfs.uchicago.edu/opt/uc3/,"
+                               "pubkey=uc3.key,%s" % CVMFS_COMMON_OPTS,
+                    'key': 'http://stash.osgconnect.net/keys/uc3.key',
+                }}}
 
 
 def get_directories(config, dir_type):
@@ -61,7 +87,7 @@ def get_directories(config, dir_type):
     """
 
     if (config.has_option('Directories', dir_type) and
-        config.get('Directories', dir_type) != ''):
+                config.get('Directories', dir_type) != ''):
         directories = config.get('Directories', dir_type).split(',')
         directories = map(lambda x: x.strip(), directories)
         return directories
@@ -263,7 +289,7 @@ def create_job_wrapper(output_file, ticket_duration, config):
         template = template.replace('%%%TICKET%%%',
                                     chirp_ticket)
         if (config.has_option('Application', 'http_proxy') and
-            config.get('Application', 'http_proxy') != ''):
+                    config.get('Application', 'http_proxy') != ''):
 
             template = template.replace('%%%WEB_PROXY%%%',
                                         config.get('Application', 'http_proxy'))
@@ -271,8 +297,8 @@ def create_job_wrapper(output_file, ticket_duration, config):
             template = template.replace('%%%WEB_PROXY%%%', '')
 
         if (config.has_section('Parrot') and
-            config.has_option('Parrot', 'location') and
-            config.get('Parrot', 'location') != ''):
+                config.has_option('Parrot', 'location') and
+                    config.get('Parrot', 'location') != ''):
 
             template = template.replace('%%%PARROT_URL%%%',
                                         config.get('Parrot', 'location'))
@@ -280,8 +306,8 @@ def create_job_wrapper(output_file, ticket_duration, config):
             template = template.replace('%%%PARROT_URL%%%',
                                         'http://stash.osgconnect.net/parrot')
         if (config.has_section('Application') and
-            config.has_option('Application', 'location') and
-            config.get('Application', 'location') != ''):
+                config.has_option('Application', 'location') and
+                    config.get('Application', 'location') != ''):
 
             template = template.replace('%%%APP_URL%%%',
                                         config.get('Application', 'location'))
@@ -290,8 +316,8 @@ def create_job_wrapper(output_file, ticket_duration, config):
         template = template.replace('%%%JOB_SCRIPT%%%',
                                     config.get('Application', 'script'))
         if (config.has_section('Application') and
-            (config.has_option('Application', 'arguments') and
-             config.get('Application', 'arguments') != '')):
+                (config.has_option('Application', 'arguments') and
+                         config.get('Application', 'arguments') != '')):
             template = template.replace('%%%JOB_ARGS%%%',
                                         parse_args(config.get('Application',
                                                               'arguments')))
