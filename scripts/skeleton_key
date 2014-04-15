@@ -324,7 +324,7 @@ def create_job_wrapper(output_file, ticket_duration, config):
         else:
             template = template.replace('%%%JOB_ARGS%%%', '""')
 
-        template = template.replace('%%%CVMFS_INFO%%%',
+        template = template.replace('\'%%%CVMFS_INFO%%%\'',
                                     str(parse_cvmfs_options(config)))
 
         proxy = get_user_proxy(config)
