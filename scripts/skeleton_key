@@ -26,7 +26,7 @@ import sys
 import ConfigParser
 import urlparse
 
-VERSION = '0.17-osgc'
+VERSION = '0.18-osgc'
 CHIRP_SERVER = 'stash.osgconnect.net'
 RUN_TEMPLATE_LOCATION = '/usr/share/skeletonkey/run_job.py'
 OASIS_CONFIG = {'oasis.opensciencegrid.org': {
