@@ -215,7 +215,7 @@ def get_cvmfs_keys(temp_dir):
         key_file.close()
 
 
-def run_application(temp_dir, debug=False):
+def run_application(temp_dir, args, debug=False):
     """
     Run specified user application in a parrot environment
     """
@@ -225,6 +225,8 @@ def run_application(temp_dir, debug=False):
                 '-M',
                 "/remote_data=%s" % CHIRP_MOUNT,
                 '-F',  # enables file snapshots which caches file contents
+                '-b',
+                '1048576',
                 '-t',
                 os.path.join(temp_dir, 'parrot_cache'),
                 '-r',
@@ -235,8 +237,8 @@ def run_application(temp_dir, debug=False):
     if JOB_ARGS != "":
         job_args.extend(JOB_ARGS.split(' '))
     os.chdir(temp_dir)
-    if len(sys.argv) > 1:
-        job_args.extend(sys.argv[1:])
+    if len(args) > 0:
+        job_args.extend(args)
     if debug:
         sys.stdout.write("Parrot call:\n %s\n" % (" ".join(job_args)))
     return subprocess.call(job_args, env=job_env)
@@ -282,7 +284,7 @@ def main():
         if not setup_application(temp_dir):
             sys.stderr.write("Can't download application binaries, exiting...\n")
             sys.exit(1)
-    exit_code = run_application(temp_dir, options.debug)
+    exit_code = run_application(temp_dir, args, options.debug)
     if exit_code != 0:
         sys.stderr.write("Application exited with error\n")
         if options.debug:
