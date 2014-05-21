@@ -35,7 +35,7 @@ PARROT_URL = '%%%PARROT_URL%%%'
 JOB_SCRIPT = '%%%JOB_SCRIPT%%%'
 JOB_ARGS = '%%%JOB_ARGS%%%'
 CVMFS_INFO = '%%%CVMFS_INFO%%%'
-VERSION = '0.18-osgc'
+VERSION = '0.19-osgc'
 
 
 def write_ticket(directory):
